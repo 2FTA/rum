@@ -40,7 +40,7 @@ export function DeleteSectionControl({
     <div ref={rootRef} className="relative shrink-0">
       <button
         type="button"
-        className="flex h-7 w-7 items-center justify-center rounded-notion text-notion-muted opacity-0 transition-opacity hover:bg-notion-hover hover:text-notion-text group-hover:opacity-100 data-[open=true]:opacity-100"
+        className="flex h-7 w-7 items-center justify-center rounded-notion text-notion-muted opacity-100 transition-opacity hover:bg-notion-hover hover:text-notion-text md:opacity-0 md:group-hover:opacity-100 data-[open=true]:opacity-100"
         data-open={open}
         aria-label={`Удалить раздел «${sectionTitle}»`}
         onClick={(event) => {

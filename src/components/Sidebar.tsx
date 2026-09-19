@@ -41,7 +41,10 @@ export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
 
         <nav className="flex flex-col gap-0.5 px-2 md:px-3">
           {NAV_ITEMS.map(({ href, label }) => {
-            const isActive = pathname === href || pathname.startsWith(`${href}/`);
+            const isActive =
+              href === "/dictionary"
+                ? pathname === href || pathname.startsWith("/dictionary/section")
+                : pathname === href || pathname.startsWith(`${href}/`);
             return (
               <Link
                 key={href}

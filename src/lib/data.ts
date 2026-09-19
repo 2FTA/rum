@@ -16,6 +16,19 @@ export type WordRow = {
   created_at: string;
 };
 
+export type WordSearchRow = WordRow & {
+  sections: { title: string; emoji: string | null } | null;
+};
+
+export type WordSearchResult = {
+  id: string;
+  sectionId: string;
+  term: string;
+  translation: string;
+  sectionTitle: string;
+  sectionEmoji?: string;
+};
+
 const DEFAULT_SECTION_TEMPLATES: { title: string; emoji: string }[] = [
   { emoji: "🍔", title: "Еда" },
   { emoji: "🏠", title: "Дом" },
@@ -50,6 +63,10 @@ function throwOnError(error: { message: string } | null): void {
   }
 }
 
+function escapeIlikePattern(value: string): string {
+  return value.replace(/[%_,]/g, "\\$&");
+}
+
 export async function fetchSections(): Promise<DictionarySection[]> {
   const { data, error } = await supabase
     .from("sections")
@@ -58,6 +75,22 @@ export async function fetchSections(): Promise<DictionarySection[]> {
 
   throwOnError(error);
   return (data as SectionRow[] | null)?.map(mapSection) ?? [];
+}
+
+export async function fetchSectionById(
+  id: string,
+): Promise<DictionarySection | null> {
+  const { data, error } = await supabase
+    .from("sections")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error?.code === "PGRST116") {
+    return null;
+  }
+  throwOnError(error);
+  return mapSection(data as SectionRow);
 }
 
 /** Если таблица пуста — один раз создаёт стартовые разделы. */
@@ -134,6 +167,31 @@ export async function fetchWordsBySectionId(
 
   throwOnError(error);
   return (data as WordRow[] | null)?.map(mapWord) ?? [];
+}
+
+export async function searchWords(query: string): Promise<WordSearchResult[]> {
+  const trimmed = query.trim();
+  if (!trimmed) {
+    return [];
+  }
+
+  const pattern = escapeIlikePattern(trimmed);
+  const { data, error } = await supabase
+    .from("words")
+    .select("*, sections(title, emoji)")
+    .or(`term.ilike.%${pattern}%,translation.ilike.%${pattern}%`)
+    .limit(20);
+
+  throwOnError(error);
+
+  return ((data as WordSearchRow[] | null) ?? []).map((row) => ({
+    id: row.id,
+    sectionId: row.section_id,
+    term: row.term,
+    translation: row.translation,
+    sectionTitle: row.sections?.title ?? "Раздел",
+    sectionEmoji: row.sections?.emoji ?? undefined,
+  }));
 }
 
 export async function createWord(
