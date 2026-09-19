@@ -1,15 +1,10 @@
-"use client";
+import { DictionarySectionPageClient } from "./DictionarySectionPageClient";
 
-import { useParams } from "next/navigation";
-import { DictionarySectionView } from "@/components/dictionary/DictionarySectionView";
+/** Заглушка для static export; реальные id обслуживаются через SPA-fallback (404.html). */
+export function generateStaticParams() {
+  return [{ sectionId: "_" }];
+}
 
 export default function DictionarySectionPage() {
-  const params = useParams<{ sectionId: string }>();
-  const sectionId = params.sectionId;
-
-  if (!sectionId) {
-    return null;
-  }
-
-  return <DictionarySectionView sectionId={sectionId} />;
+  return <DictionarySectionPageClient />;
 }
