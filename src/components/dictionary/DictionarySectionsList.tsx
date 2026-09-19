@@ -18,20 +18,13 @@ function SectionEmoji({ emoji }: { emoji?: string }) {
 }
 
 export function DictionarySectionsList() {
-  const { sections, isReady, addSection, removeSection } =
+  const { sections, isReady, error, addSection, removeSection } =
     useDictionarySections();
   const [isAdding, setIsAdding] = useState(false);
 
   if (!isReady) {
     return (
-      <div className="mt-8 space-y-1">
-        {[1, 2, 3].map((item) => (
-          <div
-            key={item}
-            className="h-9 animate-pulse rounded-notion bg-notion-hover/70"
-          />
-        ))}
-      </div>
+      <p className="mt-8 text-sm text-notion-muted">Загрузка...</p>
     );
   }
 
@@ -39,6 +32,12 @@ export function DictionarySectionsList() {
 
   return (
     <div className="mt-6">
+      {error ? (
+        <p className="mb-4 rounded-notion border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </p>
+      ) : null}
+
       <button
         type="button"
         className="rounded-notion px-1 py-1 text-sm text-notion-muted transition-colors hover:bg-notion-hover hover:text-notion-text"
@@ -67,7 +66,9 @@ export function DictionarySectionsList() {
                 </span>
                 <DeleteSectionControl
                   sectionTitle={section.title}
-                  onConfirm={() => removeSection(section.id)}
+                  onConfirm={() => {
+                    void removeSection(section.id);
+                  }}
                 />
               </Link>
             </li>
@@ -76,8 +77,8 @@ export function DictionarySectionsList() {
           {isAdding ? (
             <li>
               <NewSectionInlineForm
-                onSave={(title, emoji) => {
-                  const saved = addSection(title, emoji);
+                onSave={async (title, emoji) => {
+                  const saved = await addSection(title, emoji);
                   if (saved) {
                     setIsAdding(false);
                   }

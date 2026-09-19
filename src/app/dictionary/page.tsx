@@ -1,3 +1,5 @@
+"use client";
+
 import { DictionarySectionsList } from "@/components/dictionary/DictionarySectionsList";
 
 export default function DictionaryPage() {

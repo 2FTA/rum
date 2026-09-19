@@ -7,8 +7,8 @@ import { WordFieldColumns } from "@/components/dictionary/WordFieldColumns";
 
 type WordListItemProps = {
   word: DictionaryWord;
-  onUpdate: (id: string, term: string, translation: string) => boolean;
-  onRemove: (id: string) => void;
+  onUpdate: (id: string, term: string, translation: string) => Promise<boolean>;
+  onRemove: (id: string) => Promise<void>;
 };
 
 export function WordListItem({ word, onUpdate, onRemove }: WordListItemProps) {
@@ -30,8 +30,8 @@ export function WordListItem({ word, onUpdate, onRemove }: WordListItemProps) {
     }
   }, [isEditing]);
 
-  const save = () => {
-    const saved = onUpdate(word.id, term, translation);
+  const save = async () => {
+    const saved = await onUpdate(word.id, term, translation);
     if (saved) {
       setIsEditing(false);
     }
@@ -46,7 +46,7 @@ export function WordListItem({ word, onUpdate, onRemove }: WordListItemProps) {
   const handleEnter = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
       event.preventDefault();
-      save();
+      void save();
     }
     if (event.key === "Escape") {
       event.preventDefault();
@@ -89,7 +89,12 @@ export function WordListItem({ word, onUpdate, onRemove }: WordListItemProps) {
           onTranslationKeyDown={handleEnter}
           termInputRef={termRef}
         />
-        <DeleteWordControl term={word.term} onConfirm={() => onRemove(word.id)} />
+        <DeleteWordControl
+          term={word.term}
+          onConfirm={() => {
+            void onRemove(word.id);
+          }}
+        />
       </div>
     </li>
   );

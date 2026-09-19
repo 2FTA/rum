@@ -3,107 +3,94 @@
 import { useCallback, useEffect, useState } from "react";
 import type { DictionarySection } from "@/types/dictionary";
 import {
-  DICTIONARY_SECTIONS_KEY,
-  createStorageId,
-  ensureDictionarySections,
-  readDictionarySections,
-  removeDictionaryWordsBySectionId,
-  writeDictionarySections,
-} from "@/lib/storage";
+  createSection,
+  deleteSection,
+  fetchSectionsWithDefaults,
+  updateSection as updateSectionInDb,
+} from "@/lib/data";
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return "Не удалось выполнить операцию. Попробуйте ещё раз.";
+}
 
 export function useDictionarySections() {
   const [sections, setSectionsState] = useState<DictionarySection[]>([]);
   const [isReady, setIsReady] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    setSectionsState(ensureDictionarySections());
-    setIsReady(true);
+  const loadSections = useCallback(async () => {
+    setError(null);
+    try {
+      const data = await fetchSectionsWithDefaults();
+      setSectionsState(data);
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setIsReady(true);
+    }
   }, []);
 
   useEffect(() => {
-    const onStorage = (event: StorageEvent) => {
-      if (event.key !== DICTIONARY_SECTIONS_KEY) {
-        return;
-      }
-      setSectionsState(readDictionarySections());
-    };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, []);
+    void loadSections();
+  }, [loadSections]);
 
-  const setSections = useCallback(
-    (
-      updater:
-        | DictionarySection[]
-        | ((prev: DictionarySection[]) => DictionarySection[]),
-    ) => {
-      setSectionsState((prev) => {
-        const next = typeof updater === "function" ? updater(prev) : updater;
-        writeDictionarySections(next);
-        return next;
-      });
-    },
-    [],
-  );
-
-  const addSection = useCallback(
-    (title: string, emoji?: string) => {
-      const trimmed = title.trim();
-      if (!trimmed) {
-        return false;
-      }
-      const section: DictionarySection = {
-        id: createStorageId(),
-        title: trimmed,
-        emoji: emoji?.trim() || undefined,
-        createdAt: Date.now(),
-      };
-      setSections((prev) =>
+  const addSection = useCallback(async (title: string, emoji?: string) => {
+    const trimmed = title.trim();
+    if (!trimmed) {
+      return false;
+    }
+    setError(null);
+    try {
+      const section = await createSection(trimmed, emoji);
+      setSectionsState((prev) =>
         [...prev, section].sort((a, b) => a.createdAt - b.createdAt),
       );
       return true;
-    },
-    [setSections],
-  );
+    } catch (err) {
+      setError(getErrorMessage(err));
+      return false;
+    }
+  }, []);
 
-  const removeSection = useCallback(
-    (id: string) => {
-      setSections((prev) => prev.filter((section) => section.id !== id));
-      removeDictionaryWordsBySectionId(id);
-    },
-    [setSections],
-  );
+  const removeSection = useCallback(async (id: string) => {
+    setError(null);
+    try {
+      await deleteSection(id);
+      setSectionsState((prev) => prev.filter((section) => section.id !== id));
+    } catch (err) {
+      setError(getErrorMessage(err));
+    }
+  }, []);
 
   const updateSection = useCallback(
-    (
+    async (
       id: string,
       patch: Partial<Pick<DictionarySection, "title" | "emoji">>,
     ) => {
-      setSections((prev) =>
-        prev.map((section) => {
-          if (section.id !== id) {
-            return section;
-          }
-          const title =
-            patch.title !== undefined ? patch.title.trim() : section.title;
-          if (!title) {
-            return section;
-          }
-          const emoji =
-            patch.emoji !== undefined
-              ? patch.emoji.trim() || undefined
-              : section.emoji;
-          return { ...section, title, emoji };
-        }),
-      );
+      setError(null);
+      try {
+        const updated = await updateSectionInDb(id, {
+          title: patch.title,
+          emoji: patch.emoji,
+        });
+        setSectionsState((prev) =>
+          prev.map((section) => (section.id === id ? updated : section)),
+        );
+      } catch (err) {
+        setError(getErrorMessage(err));
+      }
     },
-    [setSections],
+    [],
   );
 
   return {
     sections,
     isReady,
-    setSections,
+    error,
+    reload: loadSections,
     addSection,
     removeSection,
     updateSection,

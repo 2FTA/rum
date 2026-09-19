@@ -1,108 +1,102 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { DictionaryWord } from "@/types/dictionary";
 import {
-  DICTIONARY_WORDS_KEY,
-  createStorageId,
-  readDictionaryWords,
-  writeDictionaryWords,
-} from "@/lib/storage";
+  createWord,
+  deleteWord,
+  fetchWordsBySectionId,
+  updateWord as updateWordInDb,
+} from "@/lib/data";
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return "Не удалось выполнить операцию. Попробуйте ещё раз.";
+}
 
 export function useDictionaryWords(sectionId: string) {
   const [words, setWordsState] = useState<DictionaryWord[]>([]);
   const [isReady, setIsReady] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadWords = useCallback(async () => {
+    if (!sectionId) {
+      return;
+    }
+    setIsReady(false);
+    setError(null);
+    try {
+      const data = await fetchWordsBySectionId(sectionId);
+      setWordsState(data);
+    } catch (err) {
+      setError(getErrorMessage(err));
+      setWordsState([]);
+    } finally {
+      setIsReady(true);
+    }
+  }, [sectionId]);
 
   useEffect(() => {
-    setWordsState(readDictionaryWords());
-    setIsReady(true);
-  }, []);
+    void loadWords();
+  }, [loadWords]);
 
-  useEffect(() => {
-    const onStorage = (event: StorageEvent) => {
-      if (event.key !== DICTIONARY_WORDS_KEY) {
-        return;
+  const addWord = useCallback(
+    async (term: string, translation: string) => {
+      const trimmedTerm = term.trim();
+      if (!trimmedTerm) {
+        return false;
       }
-      setWordsState(readDictionaryWords());
-    };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, []);
+      setError(null);
+      try {
+        const word = await createWord(sectionId, trimmedTerm, translation);
+        setWordsState((prev) => [...prev, word]);
+        return true;
+      } catch (err) {
+        setError(getErrorMessage(err));
+        return false;
+      }
+    },
+    [sectionId],
+  );
 
-  const setWords = useCallback(
-    (
-      updater:
-        | DictionaryWord[]
-        | ((prev: DictionaryWord[]) => DictionaryWord[]),
-    ) => {
-      setWordsState((prev) => {
-        const next = typeof updater === "function" ? updater(prev) : updater;
-        writeDictionaryWords(next);
-        return next;
-      });
+  const updateWord = useCallback(
+    async (id: string, term: string, translation: string) => {
+      const trimmedTerm = term.trim();
+      if (!trimmedTerm) {
+        return false;
+      }
+      setError(null);
+      try {
+        const updated = await updateWordInDb(id, trimmedTerm, translation);
+        setWordsState((prev) =>
+          prev.map((word) => (word.id === id ? updated : word)),
+        );
+        return true;
+      } catch (err) {
+        setError(getErrorMessage(err));
+        return false;
+      }
     },
     [],
   );
 
-  const sectionWords = useMemo(
-    () =>
-      words
-        .filter((word) => word.sectionId === sectionId)
-        .sort((a, b) => a.createdAt - b.createdAt),
-    [words, sectionId],
-  );
-
-  const addWord = useCallback(
-    (term: string, translation: string) => {
-      const trimmedTerm = term.trim();
-      if (!trimmedTerm) {
-        return false;
-      }
-      const word: DictionaryWord = {
-        id: createStorageId(),
-        sectionId,
-        term: trimmedTerm,
-        translation: translation.trim(),
-        createdAt: Date.now(),
-      };
-      setWords((prev) => [...prev, word]);
-      return true;
-    },
-    [sectionId, setWords],
-  );
-
-  const updateWord = useCallback(
-    (id: string, term: string, translation: string) => {
-      const trimmedTerm = term.trim();
-      if (!trimmedTerm) {
-        return false;
-      }
-      setWords((prev) =>
-        prev.map((word) =>
-          word.id === id
-            ? {
-                ...word,
-                term: trimmedTerm,
-                translation: translation.trim(),
-              }
-            : word,
-        ),
-      );
-      return true;
-    },
-    [setWords],
-  );
-
-  const removeWord = useCallback(
-    (id: string) => {
-      setWords((prev) => prev.filter((word) => word.id !== id));
-    },
-    [setWords],
-  );
+  const removeWord = useCallback(async (id: string) => {
+    setError(null);
+    try {
+      await deleteWord(id);
+      setWordsState((prev) => prev.filter((word) => word.id !== id));
+    } catch (err) {
+      setError(getErrorMessage(err));
+    }
+  }, []);
 
   return {
-    words: sectionWords,
+    words,
     isReady,
+    error,
+    reload: loadWords,
     addWord,
     updateWord,
     removeWord,

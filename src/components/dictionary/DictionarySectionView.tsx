@@ -12,10 +12,12 @@ type DictionarySectionViewProps = {
 };
 
 export function DictionarySectionView({ sectionId }: DictionarySectionViewProps) {
-  const { sections, isReady, updateSection } = useDictionarySections();
+  const { sections, isReady, error: sectionsError, updateSection } =
+    useDictionarySections();
   const {
     words,
     isReady: wordsReady,
+    error: wordsError,
     addWord,
     updateWord,
     removeWord,
@@ -23,11 +25,14 @@ export function DictionarySectionView({ sectionId }: DictionarySectionViewProps)
   const section = sections.find((item) => item.id === sectionId);
 
   if (!isReady) {
+    return <p className="text-sm text-notion-muted">Загрузка...</p>;
+  }
+
+  if (sectionsError && !section) {
     return (
-      <div className="space-y-4">
-        <div className="h-4 w-32 animate-pulse rounded-notion bg-notion-hover/70" />
-        <div className="h-10 w-64 animate-pulse rounded-notion bg-notion-hover/70" />
-      </div>
+      <p className="rounded-notion border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        {sectionsError}
+      </p>
     );
   }
 
@@ -44,9 +49,17 @@ export function DictionarySectionView({ sectionId }: DictionarySectionViewProps)
         ← Назад к словарю
       </Link>
 
+      {sectionsError ? (
+        <p className="mt-4 rounded-notion border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {sectionsError}
+        </p>
+      ) : null}
+
       <SectionEditableHeader
         section={section}
-        onSave={(patch) => updateSection(sectionId, patch)}
+        onSave={(patch) => {
+          void updateSection(sectionId, patch);
+        }}
       />
 
       <p className="mt-2 px-1 text-sm text-notion-muted">
@@ -56,6 +69,7 @@ export function DictionarySectionView({ sectionId }: DictionarySectionViewProps)
       <SectionWordsList
         words={words}
         isReady={wordsReady}
+        error={wordsError}
         addWord={addWord}
         updateWord={updateWord}
         removeWord={removeWord}

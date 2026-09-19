@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 
 type NewSectionInlineFormProps = {
-  onSave: (title: string, emoji?: string) => boolean;
+  onSave: (title: string, emoji?: string) => boolean | Promise<boolean>;
   onCancel: () => void;
 };
 
@@ -18,10 +18,11 @@ export function NewSectionInlineForm({
     titleRef.current?.focus();
   }, []);
 
-  const submit = () => {
+  const submit = async () => {
     const title = titleRef.current?.value ?? "";
     const emoji = emojiRef.current?.value ?? "";
-    if (onSave(title, emoji)) {
+    const saved = await onSave(title, emoji);
+    if (saved) {
       if (emojiRef.current) emojiRef.current.value = "";
       if (titleRef.current) titleRef.current.value = "";
       titleRef.current?.focus();
@@ -40,7 +41,7 @@ export function NewSectionInlineForm({
         onKeyDown={(event) => {
           if (event.key === "Enter") {
             event.preventDefault();
-            submit();
+            void submit();
           }
           if (event.key === "Escape") {
             event.preventDefault();
@@ -57,7 +58,7 @@ export function NewSectionInlineForm({
         onKeyDown={(event) => {
           if (event.key === "Enter") {
             event.preventDefault();
-            submit();
+            void submit();
           }
           if (event.key === "Escape") {
             event.preventDefault();

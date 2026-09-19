@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { WordFieldColumns } from "@/components/dictionary/WordFieldColumns";
 
 type AddWordRowProps = {
-  onSave: (term: string, translation: string) => boolean;
+  onSave: (term: string, translation: string) => Promise<boolean>;
   onCancel: () => void;
 };
 
@@ -17,8 +17,8 @@ export function AddWordRow({ onSave, onCancel }: AddWordRowProps) {
     termRef.current?.focus();
   }, []);
 
-  const submit = () => {
-    const saved = onSave(term, translation);
+  const submit = async () => {
+    const saved = await onSave(term, translation);
     if (saved) {
       setTerm("");
       setTranslation("");
@@ -26,10 +26,10 @@ export function AddWordRow({ onSave, onCancel }: AddWordRowProps) {
     }
   };
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
       event.preventDefault();
-      submit();
+      void submit();
     }
     if (event.key === "Escape") {
       event.preventDefault();

@@ -8,14 +8,16 @@ import { WordListItem } from "@/components/dictionary/WordListItem";
 type SectionWordsListProps = {
   words: DictionaryWord[];
   isReady: boolean;
-  addWord: (term: string, translation: string) => boolean;
-  updateWord: (id: string, term: string, translation: string) => boolean;
-  removeWord: (id: string) => void;
+  error: string | null;
+  addWord: (term: string, translation: string) => Promise<boolean>;
+  updateWord: (id: string, term: string, translation: string) => Promise<boolean>;
+  removeWord: (id: string) => Promise<void>;
 };
 
 export function SectionWordsList({
   words,
   isReady,
+  error,
   addWord,
   updateWord,
   removeWord,
@@ -24,19 +26,18 @@ export function SectionWordsList({
 
   if (!isReady) {
     return (
-      <div className="mt-8 space-y-1">
-        {[1, 2, 3].map((item) => (
-          <div
-            key={item}
-            className="h-10 animate-pulse rounded-notion bg-notion-hover/70"
-          />
-        ))}
-      </div>
+      <p className="mt-8 text-sm text-notion-muted">Загрузка...</p>
     );
   }
 
   return (
     <div className="mt-8">
+      {error ? (
+        <p className="mb-4 rounded-notion border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </p>
+      ) : null}
+
       <ul className="flex flex-col">
         {words.map((word) => (
           <WordListItem
