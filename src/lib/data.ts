@@ -13,7 +13,22 @@ export type WordRow = {
   section_id: string;
   term: string;
   translation: string;
+  plural: string | null;
+  gender: string | null;
+  past_tense: string | null;
+  article_singular: string | null;
+  article_plural: string | null;
   created_at: string;
+};
+
+export type WordWritePayload = {
+  term: string;
+  translation: string;
+  plural: string | null;
+  gender: string | null;
+  past_tense: string | null;
+  article_singular: string | null;
+  article_plural: string | null;
 };
 
 export type WordSearchRow = WordRow & {
@@ -53,6 +68,11 @@ function mapWord(row: WordRow): DictionaryWord {
     sectionId: row.section_id,
     term: row.term,
     translation: row.translation,
+    plural: row.plural ?? null,
+    gender: row.gender ?? null,
+    past_tense: row.past_tense ?? null,
+    article_singular: row.article_singular ?? null,
+    article_plural: row.article_plural ?? null,
     createdAt: new Date(row.created_at).getTime(),
   };
 }
@@ -196,15 +216,19 @@ export async function searchWords(query: string): Promise<WordSearchResult[]> {
 
 export async function createWord(
   sectionId: string,
-  term: string,
-  translation: string,
+  payload: WordWritePayload,
 ): Promise<DictionaryWord> {
   const { data, error } = await supabase
     .from("words")
     .insert({
       section_id: sectionId,
-      term: term.trim(),
-      translation: translation.trim(),
+      term: payload.term,
+      translation: payload.translation,
+      plural: payload.plural,
+      gender: payload.gender,
+      past_tense: payload.past_tense,
+      article_singular: payload.article_singular,
+      article_plural: payload.article_plural,
     })
     .select()
     .single();
@@ -215,12 +239,19 @@ export async function createWord(
 
 export async function updateWord(
   id: string,
-  term: string,
-  translation: string,
+  payload: WordWritePayload,
 ): Promise<DictionaryWord> {
   const { data, error } = await supabase
     .from("words")
-    .update({ term: term.trim(), translation: translation.trim() })
+    .update({
+      term: payload.term,
+      translation: payload.translation,
+      plural: payload.plural,
+      gender: payload.gender,
+      past_tense: payload.past_tense,
+      article_singular: payload.article_singular,
+      article_plural: payload.article_plural,
+    })
     .eq("id", id)
     .select()
     .single();

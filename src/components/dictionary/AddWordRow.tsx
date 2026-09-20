@@ -1,16 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
-import { WordFieldColumns } from "@/components/dictionary/WordFieldColumns";
+import { WordFormFields } from "@/components/dictionary/WordFormFields";
+import { emptyWordFormValues, type WordFormValues } from "@/types/dictionary";
 
 type AddWordRowProps = {
-  onSave: (term: string, translation: string) => Promise<boolean>;
+  onSave: (values: WordFormValues) => Promise<boolean>;
   onCancel: () => void;
 };
 
 export function AddWordRow({ onSave, onCancel }: AddWordRowProps) {
-  const [term, setTerm] = useState("");
-  const [translation, setTranslation] = useState("");
+  const [values, setValues] = useState<WordFormValues>(emptyWordFormValues());
   const termRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -18,15 +18,16 @@ export function AddWordRow({ onSave, onCancel }: AddWordRowProps) {
   }, []);
 
   const submit = async () => {
-    const saved = await onSave(term, translation);
+    const saved = await onSave(values);
     if (saved) {
-      setTerm("");
-      setTranslation("");
+      setValues(emptyWordFormValues());
       termRef.current?.focus();
     }
   };
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (
+    event: KeyboardEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     if (event.key === "Enter") {
       event.preventDefault();
       void submit();
@@ -39,17 +40,11 @@ export function AddWordRow({ onSave, onCancel }: AddWordRowProps) {
 
   return (
     <li>
-      <div className="flex items-start rounded-notion px-2 py-2 md:items-center md:py-1.5">
-        <WordFieldColumns
-          term={term}
-          translation={translation}
-          editable
-          termPlaceholder="Слово"
-          translationPlaceholder="Перевод"
-          onTermChange={setTerm}
-          onTranslationChange={setTranslation}
-          onTermKeyDown={handleKeyDown}
-          onTranslationKeyDown={handleKeyDown}
+      <div className="rounded-notion px-2 py-2">
+        <WordFormFields
+          values={values}
+          onChange={(patch) => setValues((prev) => ({ ...prev, ...patch }))}
+          onKeyDown={handleKeyDown}
           termInputRef={termRef}
         />
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import type { WordFormValues } from "@/types/dictionary";
 import type { DictionaryWord } from "@/types/dictionary";
 import {
   createWord,
@@ -8,6 +9,7 @@ import {
   fetchWordsBySectionId,
   updateWord as updateWordInDb,
 } from "@/lib/data";
+import { isWordFormValid, wordFormToPayload } from "@/lib/word-form";
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
@@ -43,14 +45,13 @@ export function useDictionaryWords(sectionId: string) {
   }, [loadWords]);
 
   const addWord = useCallback(
-    async (term: string, translation: string) => {
-      const trimmedTerm = term.trim();
-      if (!trimmedTerm) {
+    async (values: WordFormValues) => {
+      if (!isWordFormValid(values)) {
         return false;
       }
       setError(null);
       try {
-        const word = await createWord(sectionId, trimmedTerm, translation);
+        const word = await createWord(sectionId, wordFormToPayload(values));
         setWordsState((prev) => [...prev, word]);
         return true;
       } catch (err) {
@@ -61,26 +62,22 @@ export function useDictionaryWords(sectionId: string) {
     [sectionId],
   );
 
-  const updateWord = useCallback(
-    async (id: string, term: string, translation: string) => {
-      const trimmedTerm = term.trim();
-      if (!trimmedTerm) {
-        return false;
-      }
-      setError(null);
-      try {
-        const updated = await updateWordInDb(id, trimmedTerm, translation);
-        setWordsState((prev) =>
-          prev.map((word) => (word.id === id ? updated : word)),
-        );
-        return true;
-      } catch (err) {
-        setError(getErrorMessage(err));
-        return false;
-      }
-    },
-    [],
-  );
+  const updateWord = useCallback(async (id: string, values: WordFormValues) => {
+    if (!isWordFormValid(values)) {
+      return false;
+    }
+    setError(null);
+    try {
+      const updated = await updateWordInDb(id, wordFormToPayload(values));
+      setWordsState((prev) =>
+        prev.map((word) => (word.id === id ? updated : word)),
+      );
+      return true;
+    } catch (err) {
+      setError(getErrorMessage(err));
+      return false;
+    }
+  }, []);
 
   const removeWord = useCallback(async (id: string) => {
     setError(null);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { DictionaryWord } from "@/types/dictionary";
+import type { DictionaryWord, WordFormValues } from "@/types/dictionary";
 import { AddWordRow } from "@/components/dictionary/AddWordRow";
 import { WordListItem } from "@/components/dictionary/WordListItem";
 
@@ -9,8 +9,8 @@ type SectionWordsListProps = {
   words: DictionaryWord[];
   isReady: boolean;
   error: string | null;
-  addWord: (term: string, translation: string) => Promise<boolean>;
-  updateWord: (id: string, term: string, translation: string) => Promise<boolean>;
+  addWord: (values: WordFormValues) => Promise<boolean>;
+  updateWord: (id: string, values: WordFormValues) => Promise<boolean>;
   removeWord: (id: string) => Promise<void>;
 };
 
