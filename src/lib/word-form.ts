@@ -27,6 +27,7 @@ export function wordFormToPayload(values: WordFormValues) {
     translation: values.translation.trim(),
     plural: trimOptionalField(values.plural),
     gender: normalizeGender(values.gender),
+    conjugation: trimOptionalField(values.conjugation),
     past_tense: trimOptionalField(values.past_tense),
     article_singular: trimOptionalField(values.article_singular),
     article_plural: trimOptionalField(values.article_plural),

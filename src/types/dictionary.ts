@@ -12,6 +12,7 @@ export type DictionaryWord = {
   translation: string;
   plural: string | null;
   gender: string | null;
+  conjugation: string | null;
   past_tense: string | null;
   article_singular: string | null;
   article_plural: string | null;
@@ -30,6 +31,7 @@ export type WordFormValues = {
   translation: string;
   plural: string;
   gender: string;
+  conjugation: string;
   past_tense: string;
   article_singular: string;
   article_plural: string;
@@ -41,6 +43,7 @@ export function emptyWordFormValues(): WordFormValues {
     translation: "",
     plural: "",
     gender: "",
+    conjugation: "",
     past_tense: "",
     article_singular: "",
     article_plural: "",
@@ -53,6 +56,7 @@ export function wordToFormValues(word: DictionaryWord): WordFormValues {
     translation: word.translation,
     plural: word.plural ?? "",
     gender: word.gender ?? "",
+    conjugation: word.conjugation ?? "",
     past_tense: word.past_tense ?? "",
     article_singular: word.article_singular ?? "",
     article_plural: word.article_plural ?? "",

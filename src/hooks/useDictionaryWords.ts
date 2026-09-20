@@ -52,7 +52,7 @@ export function useDictionaryWords(sectionId: string) {
       setError(null);
       try {
         const word = await createWord(sectionId, wordFormToPayload(values));
-        setWordsState((prev) => [...prev, word]);
+        setWordsState((prev) => [word, ...prev]);
         return true;
       } catch (err) {
         setError(getErrorMessage(err));

@@ -66,7 +66,7 @@ export function WordFormFields({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
         <label className="block">
           <span className="mb-1 block text-xs text-notion-muted">Мн. ч.</span>
           <input
@@ -92,6 +92,16 @@ export function WordFormFields({
               </option>
             ))}
           </select>
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-xs text-notion-muted">Спряжение</span>
+          <input
+            type="text"
+            value={values.conjugation}
+            className={compactFieldClassName}
+            onChange={(event) => onChange({ conjugation: event.target.value })}
+            onKeyDown={onKeyDown}
+          />
         </label>
         <label className="block">
           <span className="mb-1 block text-xs text-notion-muted">Прошлое</span>

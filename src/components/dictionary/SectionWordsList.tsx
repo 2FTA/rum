@@ -26,19 +26,38 @@ export function SectionWordsList({
 
   if (!isReady) {
     return (
-      <p className="mt-8 text-sm text-notion-muted">Загрузка...</p>
+      <p className="mt-6 text-sm text-notion-muted">Загрузка...</p>
     );
   }
 
   return (
-    <div className="mt-8">
+    <div className="mt-6">
       {error ? (
         <p className="mb-4 rounded-notion border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
           {error}
         </p>
       ) : null}
 
-      <ul className="flex flex-col">
+      {!isAdding ? (
+        <button
+          type="button"
+          className="rounded-notion px-1 py-1 text-sm text-notion-muted transition-colors hover:bg-notion-hover hover:text-notion-text"
+          onClick={() => setIsAdding(true)}
+        >
+          + Добавить слово
+        </button>
+      ) : null}
+
+      {isAdding ? (
+        <ul className="mt-2 flex flex-col">
+          <AddWordRow
+            onSave={addWord}
+            onCancel={() => setIsAdding(false)}
+          />
+        </ul>
+      ) : null}
+
+      <ul className={`flex flex-col ${isAdding ? "mt-2" : "mt-2"}`}>
         {words.map((word) => (
           <WordListItem
             key={word.id}
@@ -47,23 +66,7 @@ export function SectionWordsList({
             onRemove={removeWord}
           />
         ))}
-        {isAdding ? (
-          <AddWordRow
-            onSave={addWord}
-            onCancel={() => setIsAdding(false)}
-          />
-        ) : null}
       </ul>
-
-      {!isAdding ? (
-        <button
-          type="button"
-          className="mt-2 rounded-notion px-1 py-1 text-sm text-notion-muted transition-colors hover:bg-notion-hover hover:text-notion-text"
-          onClick={() => setIsAdding(true)}
-        >
-          + Добавить слово
-        </button>
-      ) : null}
     </div>
   );
 }

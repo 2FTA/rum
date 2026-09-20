@@ -5,6 +5,7 @@ type WordMetaDisplayProps = {
     DictionaryWord,
     | "plural"
     | "gender"
+    | "conjugation"
     | "past_tense"
     | "article_singular"
     | "article_plural"
@@ -18,6 +19,9 @@ export function WordMetaDisplay({ word }: WordMetaDisplayProps) {
   }
   if (word.gender) {
     details.push(`Род: ${word.gender}`);
+  }
+  if (word.conjugation) {
+    details.push(`Спряжение: ${word.conjugation}`);
   }
   if (word.past_tense) {
     details.push(`Прошлое: ${word.past_tense}`);
@@ -36,7 +40,7 @@ export function WordMetaDisplay({ word }: WordMetaDisplayProps) {
   }
 
   return (
-    <div className="mt-1 space-y-0.5 px-0 md:px-0">
+    <div className="mt-1 space-y-0.5">
       {details.length > 0 ? (
         <p className="text-xs leading-relaxed text-notion-muted">
           {details.join(" · ")}

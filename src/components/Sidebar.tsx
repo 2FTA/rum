@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BookIcon } from "@/components/icons/BookIcon";
+import { LearningIcon } from "@/components/icons/LearningIcon";
+import { RulesIcon } from "@/components/icons/RulesIcon";
 import { NAV_ITEMS, SITE_NAME } from "@/lib/constants";
 
 type SidebarProps = {
@@ -10,11 +12,24 @@ type SidebarProps = {
   onClose: () => void;
 };
 
-function NavIcon({ label }: { label: string }) {
-  if (label === "Словарь") {
-    return <BookIcon className="shrink-0 text-notion-muted" />;
+function NavIcon({ icon }: { icon: (typeof NAV_ITEMS)[number]["icon"] }) {
+  const className = "shrink-0 text-notion-muted";
+  if (icon === "dictionary") {
+    return <BookIcon className={className} />;
   }
-  return null;
+  if (icon === "rules") {
+    return <RulesIcon className={className} />;
+  }
+  return <LearningIcon className={className} />;
+}
+
+function isNavItemActive(pathname: string, href: string): boolean {
+  if (href === "/dictionary") {
+    return (
+      pathname === href || pathname.startsWith("/dictionary/section")
+    );
+  }
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
@@ -40,11 +55,8 @@ export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
         </div>
 
         <nav className="flex flex-col gap-0.5 px-2 md:px-3">
-          {NAV_ITEMS.map(({ href, label }) => {
-            const isActive =
-              href === "/dictionary"
-                ? pathname === href || pathname.startsWith("/dictionary/section")
-                : pathname === href || pathname.startsWith(`${href}/`);
+          {NAV_ITEMS.map(({ href, label, icon }) => {
+            const isActive = isNavItemActive(pathname, href);
             return (
               <Link
                 key={href}
@@ -58,7 +70,7 @@ export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
                 ].join(" ")}
                 aria-current={isActive ? "page" : undefined}
               >
-                <NavIcon label={label} />
+                <NavIcon icon={icon} />
                 <span>{label}</span>
               </Link>
             );
