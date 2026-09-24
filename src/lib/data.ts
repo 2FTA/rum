@@ -180,6 +180,22 @@ export async function deleteSection(id: string): Promise<void> {
   throwOnError(error);
 }
 
+export async function fetchWordsBySectionIds(
+  sectionIds: string[],
+): Promise<DictionaryWord[]> {
+  if (sectionIds.length === 0) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("words")
+    .select("*")
+    .in("section_id", sectionIds);
+
+  throwOnError(error);
+  return (data as WordRow[] | null)?.map(mapWord) ?? [];
+}
+
 export async function fetchWordsBySectionId(
   sectionId: string,
 ): Promise<DictionaryWord[]> {

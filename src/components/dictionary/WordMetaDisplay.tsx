@@ -21,7 +21,7 @@ export function WordMetaDisplay({ word }: WordMetaDisplayProps) {
     details.push(`Род: ${word.gender}`);
   }
   if (word.conjugation) {
-    details.push(`Спряжение: ${word.conjugation}`);
+    details.push(`Настоящее: ${word.conjugation}`);
   }
   if (word.past_tense) {
     details.push(`Прошлое: ${word.past_tense}`);

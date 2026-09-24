@@ -94,7 +94,7 @@ export function WordFormFields({
           </select>
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs text-notion-muted">Спряжение</span>
+          <span className="mb-1 block text-xs text-notion-muted">Настоящее</span>
           <input
             type="text"
             value={values.conjugation}

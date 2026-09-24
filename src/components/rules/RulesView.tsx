@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Rule } from "@/types/rule";
+import { RuleContentField } from "@/components/rules/RuleContentField";
 import { RuleListItem } from "@/components/rules/RuleListItem";
 import {
   createRule,
@@ -113,13 +114,10 @@ export function RulesView() {
                 }
               }}
             />
-            <textarea
+            <RuleContentField
               value={content}
-              placeholder="Содержание"
-              aria-label="Содержание"
-              rows={5}
               className={`${fieldClassName} mt-2 min-h-[120px] resize-y`}
-              onChange={(event) => setContent(event.target.value)}
+              onChange={setContent}
               onKeyDown={(event) => {
                 if (event.key === "Escape") {
                   event.preventDefault();

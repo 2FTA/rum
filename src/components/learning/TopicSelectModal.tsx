@@ -2,24 +2,38 @@
 
 import { useEffect, useState } from "react";
 import type { DictionarySection } from "@/types/dictionary";
+import type { FlashcardDirection } from "@/components/learning/FlashcardSession";
 import { fetchSectionsByTitle } from "@/lib/data";
 
 type TopicSelectModalProps = {
   open: boolean;
   onClose: () => void;
+  onStart: (
+    sectionIds: string[],
+    direction: FlashcardDirection,
+  ) => Promise<{ ok: true } | { ok: false; message: string }>;
 };
 
-export function TopicSelectModal({ open, onClose }: TopicSelectModalProps) {
+export function TopicSelectModal({
+  open,
+  onClose,
+  onStart,
+}: TopicSelectModalProps) {
   const [sections, setSections] = useState<DictionarySection[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [direction, setDirection] = useState<FlashcardDirection>("ro-ru");
   const [isLoading, setIsLoading] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [emptyMessage, setEmptyMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) {
       return;
     }
     setSelectedIds(new Set());
+    setDirection("ro-ru");
+    setEmptyMessage(null);
     setIsLoading(true);
     setError(null);
     void (async () => {
@@ -58,6 +72,7 @@ export function TopicSelectModal({ open, onClose }: TopicSelectModalProps) {
   }
 
   const toggleSection = (id: string) => {
+    setEmptyMessage(null);
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
@@ -69,7 +84,23 @@ export function TopicSelectModal({ open, onClose }: TopicSelectModalProps) {
     });
   };
 
-  const canStart = selectedIds.size > 0;
+  const canStart = selectedIds.size > 0 && !isStarting;
+
+  const handleStart = async () => {
+    if (!canStart) {
+      return;
+    }
+    setIsStarting(true);
+    setEmptyMessage(null);
+    setError(null);
+    const result = await onStart([...selectedIds], direction);
+    setIsStarting(false);
+    if (result.ok) {
+      onClose();
+      return;
+    }
+    setEmptyMessage(result.message);
+  };
 
   return (
     <div className="fixed inset-0 z-[70] flex items-end justify-center p-4 sm:items-center">
@@ -128,6 +159,42 @@ export function TopicSelectModal({ open, onClose }: TopicSelectModalProps) {
               })}
             </ul>
           )}
+
+          <div className="mt-3 px-2 pb-2">
+            <p className="mb-2 text-xs text-notion-muted">Направление перевода</p>
+            <div className="flex rounded-notion bg-notion-sidebar p-0.5">
+              <button
+                type="button"
+                className={[
+                  "flex-1 rounded-notion px-2 py-1.5 text-xs transition-colors sm:text-sm",
+                  direction === "ro-ru"
+                    ? "border border-notion-border bg-notion-bg text-notion-text shadow-sm"
+                    : "text-notion-muted hover:text-notion-text",
+                ].join(" ")}
+                onClick={() => setDirection("ro-ru")}
+              >
+                С румынского
+              </button>
+              <button
+                type="button"
+                className={[
+                  "flex-1 rounded-notion px-2 py-1.5 text-xs transition-colors sm:text-sm",
+                  direction === "ru-ro"
+                    ? "border border-notion-border bg-notion-bg text-notion-text shadow-sm"
+                    : "text-notion-muted hover:text-notion-text",
+                ].join(" ")}
+                onClick={() => setDirection("ru-ro")}
+              >
+                С русского
+              </button>
+            </div>
+          </div>
+
+          {emptyMessage ? (
+            <p className="mx-2 mt-2 rounded-notion border border-notion-border bg-notion-sidebar px-3 py-2 text-sm text-notion-muted">
+              {emptyMessage}
+            </p>
+          ) : null}
         </div>
 
         <div className="flex justify-end gap-2 border-t border-notion-border px-4 py-3">
@@ -142,9 +209,11 @@ export function TopicSelectModal({ open, onClose }: TopicSelectModalProps) {
             type="button"
             disabled={!canStart}
             className="rounded-notion px-3 py-1.5 text-sm text-notion-text transition-colors hover:bg-notion-hover disabled:cursor-not-allowed disabled:opacity-40"
-            onClick={onClose}
+            onClick={() => {
+              void handleStart();
+            }}
           >
-            Начать
+            {isStarting ? "Загрузка..." : "Начать"}
           </button>
         </div>
       </div>

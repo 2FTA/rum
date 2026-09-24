@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Rule } from "@/types/rule";
 import { DeleteRuleControl } from "@/components/rules/DeleteRuleControl";
+import { RuleContentField } from "@/components/rules/RuleContentField";
+import { RuleMarkdown } from "@/components/rules/RuleMarkdown";
 import { PencilIcon } from "@/components/icons/PencilIcon";
 
 type RuleListItemProps = {
@@ -74,13 +76,10 @@ export function RuleListItem({ rule, onUpdate, onRemove }: RuleListItemProps) {
             }
           }}
         />
-        <textarea
+        <RuleContentField
           value={content}
-          aria-label="Содержание"
-          placeholder="Содержание"
-          rows={5}
           className={`${fieldClassName} mt-2 min-h-[120px] resize-y`}
-          onChange={(event) => setContent(event.target.value)}
+          onChange={setContent}
           onKeyDown={(event) => {
             if (event.key === "Escape") {
               event.preventDefault();
@@ -104,9 +103,9 @@ export function RuleListItem({ rule, onUpdate, onRemove }: RuleListItemProps) {
             {rule.title}
           </span>
           {expanded ? (
-            <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-notion-muted">
-              {rule.content || "—"}
-            </p>
+            <div className="mt-2">
+              <RuleMarkdown content={rule.content} />
+            </div>
           ) : null}
         </button>
         <button
